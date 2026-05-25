@@ -16,7 +16,7 @@ codingplanDistributor:
         #configmap名称和ingress名称一致，ingress名称需要加上.internal后缀
         commonName: conding-plan-second
         path: /inner/api/coding
-        destination: ${k8sTargetServiceName}.${k8sTargetNameSpace}.svc.cluster.local:${targetServicePort}
+        destination: ${k8sTargetServiceName}.${k8sTargetNameSpace}.svc.cluster.local:${targetServicePort}  # 详见：https://higress.io/docs/latest/user/plugins/wasm-dev/wasm17/#11-fqdn
         serviceName: ctyun-open-platform-base-higress.maas-dev.svc.cluster.local
         providerName: base-higress-service   # 服务提供者的名字，就是console上定义的服务提供者名字（这个名字会存到名为ai-proxy的wasm中）
 runtime:

@@ -27,6 +27,7 @@ spec:
       - failover:
           enabled: false
         id: {{ $providerId }}
+      {{/*  k8s的集群名称规则为：outbound|<Port>|<Version>|<ServiceName>.<Namespace>.svc.cluster.local      */}}
         openaiCustomServiceName: {{.Values.codingplanDistributor.secondIngress.serviceName}}
         openaiCustomServicePort: 8080
         openaiCustomUrl: >-
