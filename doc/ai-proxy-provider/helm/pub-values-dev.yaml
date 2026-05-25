@@ -1,0 +1,25 @@
+xuntuiMaasRuntime:
+    fqdn: ctyun-ai-gateway-runtime-j.maas-xuntui-common-dev.svc.cluster.local:8080
+maasBase:
+    fqdn: ctyun-open-platform-base.maas-dev.svc.cluster.local:8080
+normalHost:  wishub-dev.ctyun.cn
+env: dev
+codingplanDistributor:
+    enabled: true
+    #服务路由第一跳
+    firstIngress:
+        ingressName: ctyun-ai-codingplan-distributor
+        path: /coding
+        destination: ctyun-open-platform-base.maas-dev.svc.cluster.local:8080
+    # ai路由第二跳 需要配置configmap、ingress、ai-proxy插件、ai-proxy.internal服务提供者数据库
+    secondIngress:
+        #configmap名称和ingress名称一致，ingress名称需要加上.internal后缀
+        commonName: conding-plan-second
+        path: /inner/api/coding
+        destination: ${k8sTargetServiceName}.${k8sTargetNameSpace}.svc.cluster.local:${targetServicePort}
+        serviceName: ctyun-open-platform-base-higress.maas-dev.svc.cluster.local
+        providerName: base-higress-service   # 服务提供者的名字，就是console上定义的服务提供者名字（这个名字会存到名为ai-proxy的wasm中）
+runtime:
+    host: ${k8sServiceName}.${k8sNameSpace}.svc.cluster.local
+    port: 8080
+    safeToken:  {{safeToken}}

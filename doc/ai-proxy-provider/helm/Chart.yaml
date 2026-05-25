@@ -1,0 +1,11 @@
+apiVersion: v2
+appVersion: 2.2.0
+description: Helm chart for deploying maas-product
+keywords:
+  - higress
+  - gateways
+name: maas-product
+sources:
+  - http://github.com/alibaba/higress
+type: application
+version:  {{chartVersion}}

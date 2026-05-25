@@ -1,0 +1,39 @@
+apiVersion: extensions.higress.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  {{- /* 拼接环境后缀，自动过滤空字符串，避免出现连续横线 */ -}}
+  {{- $envSuffix := list .Values.grayEnv .Values.pluginEnv | compact | join "" }}
+  annotations:
+    higress.io/wasm-plugin-title: ctyun-ai-codingplan-distributor-{{ $envSuffix }}
+  labels:
+    higress.io/resource-definer: higress
+    higress.io/wasm-plugin-built-in: 'false'
+    higress.io/wasm-plugin-category: custom
+    higress.io/wasm-plugin-name: ctyun-ai-codingplan-distributor-{{ $envSuffix }}
+    higress.io/wasm-plugin-version: 1.0.0
+  name: ctyun-ai-codingplan-distributor{{- if $envSuffix -}}-{{ $envSuffix }}{{- end -}}-1.0.0
+  namespace: {{ .Release.Namespace }}
+spec:
+  defaultConfigDisable: true
+  failStrategy: FAIL_OPEN
+  imagePullPolicy: Always
+  imagePullSecret: docker-login
+  {{- /* 定义默认Ingress路由，matchRules为空则启用默认值 */ -}}
+  {{- $rules := .Values.matchRules | default (list "ctyun-ai-codingplan-distributor") }}
+  matchRules:
+  {{- range $item := $rules }}
+  {{- /* 每一个 item 都自动拼接 -env  如 ctyun-ai-codingplan-distributor-dev */ -}}
+  {{- $ruleName := printf "%s-%s" $item $.Values.env }}
+    - config:
+        gatewayRuntimeHost: {{ $.Values.runtime.host }}
+        gatewayRuntimePort: {{ $.Values.runtime.port }}
+        {{/*  runtime服务和maas使用一个safetoken，maas-base的secret在 maas-zhisuan-serv中的RPC_SAFE_TOKEN，runtime服务在global中的RPC_SAFE_TOKEN_ZHISUAN*/}}
+        safeToken: {{ $.Values.runtime.safeToken }}
+      configDisable: false
+      ingress:
+        - {{ $ruleName | quote }}
+  {{- end }}
+
+  phase: AUTHZ
+  priority: {{ .Values.priority }}
+  url: oci://{{ .Values.image }}

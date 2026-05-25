@@ -1,0 +1,27 @@
+{{- if .Values.codingplanDistributor.enabled }}
+{{- $ingressName := printf "%s-%s" .Values.codingplanDistributor.firstIngress.ingressName .Values.env }}
+{{/*  如果存在配置配置就配置*/}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $ingressName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    higress.io/resource-definer: higress
+  annotations:
+    higress.io/destination: {{ .Values.codingplanDistributor.firstIngress.destination | default .Values.maasBase.fqdn }}
+    higress.io/ignore-path-case: 'false'
+spec:
+  ingressClassName: higress
+  rules:
+    - http:
+        paths:
+          - path: {{ .Values.codingplanDistributor.firstIngress.path | default "/coding" }}
+            pathType: Prefix
+            backend:
+              resource:
+                apiGroup: networking.higress.io
+                kind: McpBridge
+                name: default
+{{- end }}
+# 

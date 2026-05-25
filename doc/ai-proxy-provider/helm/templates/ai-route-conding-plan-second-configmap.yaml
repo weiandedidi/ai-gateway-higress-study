@@ -1,0 +1,46 @@
+{{- if .Values.codingplanDistributor.enabled }}
+{{- $configMapName := printf "ai-route-%s-%s" .Values.codingplanDistributor.secondIngress.commonName .Values.env }}
+{{- $routerName := printf "%s-%s" .Values.codingplanDistributor.secondIngress.commonName .Values.env }}
+{{- $providerId := printf "%s-%s" .Values.codingplanDistributor.secondIngress.providerName .Values.env }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $configMapName }}
+  namespace: higress-system
+  labels:
+    higress.io/config-map-type: ai-route
+    higress.io/resource-definer: higress
+{{/*$routerName是higress的crd定义的router的名字 官方原理(env环境的拼接是项目的非higress)：ai路由里面，ingress是的名字ai-route-$routerName.internal，configMap的名字就是用的$routerName*/}}
+data:
+  data: >-
+    {{ toJson (dict
+      "name" ($routerName)
+      "domains" (list)
+      "pathPredicate" (dict
+        "matchType" "PRE"
+        "matchValue" .Values.codingplanDistributor.secondIngress.path
+        "caseSensitive" false
+      )
+      "headerPredicates" (list)
+      "urlParamPredicates" (list)
+      "upstreams" (list (dict
+        "provider" ($providerId)
+        "weight" 100
+        "modelMapping" (dict)
+      ))
+      "modelPredicates" (list)
+      "authConfig" (dict
+        "enabled" false
+        "allowedConsumers" (list)
+      )
+      "fallbackConfig" (dict
+        "enabled" false
+      )
+      "proxyNextUpstream" (dict
+        "enabled" true
+        "attempts" 3
+        "timeout" 120000
+        "conditions" (list "error" "timeout" "non_idempotent")
+      )
+    ) }}
+{{- end }}

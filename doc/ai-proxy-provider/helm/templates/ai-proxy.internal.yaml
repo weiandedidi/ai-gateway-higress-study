@@ -1,0 +1,51 @@
+{{/*这个是ai-proxy的中服务提供者的higress的内部共享存储类类似数据库，此处定义ai提供者*/}}
+{{- if .Values.codingplanDistributor.enabled }}
+{{- $providerId := printf "%s-%s" .Values.codingplanDistributor.secondIngress.providerName .Values.env }}
+apiVersion: extensions.higress.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  annotations:
+    higress.io/comment: PLEASE DO NOT EDIT DIRECTLY. This resource is managed by Higress.
+    higress.io/wasm-plugin-description: >-
+      Provide unified OpenAI API compatible interface to call different AI
+      service providers.
+    higress.io/wasm-plugin-icon: >-
+      https://img.alicdn.com/imgextra/i1/O1CN018iKKih1iVx287RltL_!!6000000004419-2-tps-42-42.png
+    higress.io/wasm-plugin-title: AI Proxy
+  labels:
+    higress.io/internal: 'true'
+    higress.io/resource-definer: higress
+    higress.io/wasm-plugin-built-in: 'true'
+    higress.io/wasm-plugin-category: ai
+    higress.io/wasm-plugin-name: ai-proxy
+    higress.io/wasm-plugin-version: 1.0.0
+  name: ai-proxy.internal
+  namespace: higress-system
+spec:
+  defaultConfig:
+    providers:
+      - failover:
+          enabled: false
+        id: {{ $providerId }}
+        openaiCustomServiceName: {{.Values.codingplanDistributor.secondIngress.serviceName}}
+        openaiCustomServicePort: 8080
+        openaiCustomUrl: >-
+          http://{{.Values.codingplanDistributor.secondIngress.destination}}/inner/api/coding/v1
+        protocol: openai
+        retryOnFailure:
+          enabled: false
+        type: openai
+  defaultConfigDisable: false
+  failStrategy: FAIL_OPEN
+  imagePullPolicy: UNSPECIFIED_POLICY
+  matchRules:
+    - config:
+        activeProviderId: {{ $providerId }}
+      configDisable: false
+      service:
+        - {{.Values.codingplanDistributor.secondIngress.serviceName}}
+  phase: UNSPECIFIED_PHASE
+  priority: 100
+  url: oci://higress-registry.cn-hangzhou.cr.aliyuncs.com/plugins/ai-proxy:2.0.0
+
+{{- end }}
